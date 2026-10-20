@@ -60,7 +60,7 @@ export default defineConfig(
         socialLinks: [
           {
             icon: "github",
-            link: "https://github.com/OfficialPixelBrush/beta-wiki",
+            link: "https://github.com/OpenBetaGroup/beta-wiki",
           },
           {
             icon: "discord",
@@ -76,8 +76,7 @@ export default defineConfig(
           },
         ],
         editLink: {
-          pattern:
-            "https://github.com/OfficialPixelBrush/beta-wiki/edit/main/:path",
+          pattern: "https://github.com/OpenBetaGroup/beta-wiki/edit/main/:path",
         },
       },
       markdown: {
