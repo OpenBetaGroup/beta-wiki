@@ -40,4 +40,4 @@ It's interesting that the held item is sent twice, despite already being sent wi
 
 # Further reading
 
-- [A new player joins (Github - BetrockServer Wiki - Vanilla server Behavior)](https://github.com/OfficialPixelBrush/BetrockServer/wiki/Vanilla-Server-Behavior#a-new-player-joins)
+- [A new player joins (Github - BetrockServer Wiki - Vanilla server Behavior)](https://github.com/OpenBetaGroup/BetrockServer/wiki/Vanilla-Server-Behavior#a-new-player-joins)

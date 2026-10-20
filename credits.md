@@ -13,7 +13,7 @@ const members = [
         links: [
             {
                 icon: "github",
-                link: "https://github.com/OfficialPixelBrush"
+                link: "https://github.com/OpenBetaGroup"
             }
         ]
     },

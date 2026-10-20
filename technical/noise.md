@@ -19,13 +19,13 @@ The official paper can be found [here](https://dl.acm.org/doi/abs/10.1145/566654
 > [!NOTE]
 > [The Farlands](https://minecraft.wiki/w/Java_Edition_Far_Lands/Infdev_20100327_to_Beta_1.7.3) occur here due to a signed 64-bit Floating-point number being converted to a signed 32-bit Integer, resulting in the same permutation from the permutation table being chosen repeatedly. Please check how [Java does casting](/technical/javaFeatures#casting) to ensure accuracy.
 
-For an example that you can reference for your purposes, check out the [Betrock++ Source Code](https://github.com/OfficialPixelBrush/BetrockPlusPlus/blob/main/src/bpp_shared/world/noise/noise_perlin.cpp).
+For an example that you can reference for your purposes, check out the [Betrock++ Source Code](https://github.com/OpenBetaGroup/BetrockPlusPlus/blob/main/src/bpp_shared/world/noise/noise_perlin.cpp).
 
 ## Simplex Noise
 
 Minecraft uses a slightly modified implementation of Simplex noise for its [Biome values (Temperature & Humidity)](/worlds/generation/biomes). As with Perlin noise, [more can be found about this algorithm on Wikipedia](https://en.wikipedia.org/wiki/Simplex_noise). It was also developed by Ken Perlin.
 
-For an example that you can reference for your purposes, check out the [Betrock++ Source Code](https://github.com/OfficialPixelBrush/BetrockPlusPlus/blob/main/src/bpp_shared/world/noise/noise_simplex.cpp).
+For an example that you can reference for your purposes, check out the [Betrock++ Source Code](https://github.com/OpenBetaGroup/BetrockPlusPlus/blob/main/src/bpp_shared/world/noise/noise_simplex.cpp).
 
 ## Modifications made for Minecraft
 
@@ -52,7 +52,7 @@ for (int i = 0; i < octaves; ++i) {
 return total;
 ```
 
-Some of the octave generation functions work a little differently than others. Check out the [Betrock++ Source Code](https://github.com/OfficialPixelBrush/BetrockPlusPlus/tree/main/src/bpp_shared/world/noise) for more info.
+Some of the octave generation functions work a little differently than others. Check out the [Betrock++ Source Code](https://github.com/OpenBetaGroup/BetrockPlusPlus/tree/main/src/bpp_shared/world/noise) for more info.
 
 ## Further reading
 

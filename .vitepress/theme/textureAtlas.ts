@@ -323,11 +323,17 @@ export function lookupTexture(name: string): AtlasEntry | undefined {
   const atlas = key.slice(0, slash);
   const id = key.slice(slash + 1);
 
-  if (atlas === "blocks" && Object.prototype.hasOwnProperty.call(BLOCK_INDEX, id)) {
+  if (
+    atlas === "blocks" &&
+    Object.prototype.hasOwnProperty.call(BLOCK_INDEX, id)
+  ) {
     return { atlas: "blocks", index: BLOCK_INDEX[id] };
   }
 
-  if (atlas === "items" && Object.prototype.hasOwnProperty.call(ITEM_INDEX, id)) {
+  if (
+    atlas === "items" &&
+    Object.prototype.hasOwnProperty.call(ITEM_INDEX, id)
+  ) {
     return { atlas: "items", index: ITEM_INDEX[id] };
   }
 

@@ -8,7 +8,7 @@ hero:
       link: /technical/data-types
     - theme: alt
       text: View on GitHub
-      link: https://github.com/OfficialPixelBrush/beta-wiki
+      link: https://github.com/OpenBetaGroup/beta-wiki
 ---
 
 ![Technical Beta Wiki](/banner_light.webp){.light-only}
@@ -45,9 +45,9 @@ Please check the [To-Do Page](todo) to see what still needs to be done, or just 
 ## Star History
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=OfficialPixelBrush/beta-wiki&type=Date&theme=dark" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=OfficialPixelBrush/beta-wiki&type=Date" />
-  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=OfficialPixelBrush/beta-wiki&type=Date" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=OpenBetaGroup/beta-wiki&type=Date&theme=dark" />
+  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=OpenBetaGroup/beta-wiki&type=Date" />
+  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=OpenBetaGroup/beta-wiki&type=Date" />
 </picture>
 
 ## Legal Disclaimer

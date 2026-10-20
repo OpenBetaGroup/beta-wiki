@@ -1,30 +1,30 @@
 .vp-doc table {
-    width: 100%;
-    display: table;
+  width: 100%;
+  display: table;
 }
 
 img {
-    image-rendering: crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 td > img {
-    margin-left: auto;
-    margin-right: auto;
-    min-height: 64px;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 64px;
 }
 
 .medium-zoom-overlay {
-    z-index: 30;
+  z-index: 30;
 }
 
 .medium-zoom-image--opened {
-    z-index: 31;
+  z-index: 31;
 }
 
 html.dark .light-only {
-    display: none !important;
+  display: none !important;
 }
 
 html:not(.dark) .dark-only {
-    display: none !important;
+  display: none !important;
 }

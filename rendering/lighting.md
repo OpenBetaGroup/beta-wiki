@@ -50,7 +50,7 @@ if (normal.y > 0.0f) {
 }
 ```
 
-_Source: [Betrock](https://github.com/OfficialPixelBrush/Betrock/blob/5c8e83318117e89ff50f74a2b78da0e802433d8d/src/external/shaders/minecraft.fsh)_
+_Source: [LegacyWorldViewer](https://github.com/OfficialPixelBrush/LegacyWorldViewer/blob/5c8e83318117e89ff50f74a2b78da0e802433d8d/src/external/shaders/minecraft.fsh)_
 
 The resulting value is then multiplied with the underlying color.
 

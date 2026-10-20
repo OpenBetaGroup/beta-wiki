@@ -12,15 +12,15 @@ Any project that's received a commit or update of any kind at the time of writin
 
 Clients that can connect to Minecraft Beta 1.7.3-compatible servers.
 
-| Language | Project                                                            | Notes / State                            | Creator                                                                                 |
-| -------- | ------------------------------------------------------------------ | :--------------------------------------- | --------------------------------------------------------------------------------------- |
-| C        | [CavEX](https://github.com/xtreme8000/cavex)                       | <Badge type="warning" text="Inactive" /> | [xtreme8000](https://github.com/xtreme8000)                                             |
-| Hare     | [betamine](https://git.sr.ht/~sircmpwn/betamine/)                  | <Badge type="warning" text="Inactive" /> | [~sircmpwn](https://git.sr.ht/~sircmpwn/)                                               |
-| C++      | [Betrock++](https://github.com/OfficialPixelBrush/BetrockPlusPlus) | <Badge type="tip" text="Active" />       | [Pixel Brush](https://pixelbrush.dev) & [JcbbcEnjoyer](https://github.com/JcbbcEnjoyer) |
-| Zig      | [MainCraft](https://github.com/Guigui220D/MainCraft)               | <Badge type="warning" text="Inactive" /> | [Guillaume D.](https://github.com/Guigui220D)                                           |
-| C#       | [TrueCraft](https://github.com/ddevault/TrueCraft)                 | <Badge type="warning" text="Archived" /> | [ddevault](https://github.com/ddevault)                                                 |
-| C#       | [betasharp](https://git.gay/betasharp-official/betasharp)          | <Badge type="tip" text="Active" />       | [Fazin85](https://github.com/Fazin85)                                                   |
-| GDScript | [Betadot](https://github.com/OfficialPixelBrush/Betadot)           | <Badge type="warning" text="Inactive" /> | [Pixel Brush](https://pixelbrush.dev)                                                   |
+| Language | Project                                                       | Notes / State                            | Creator                                                                                 |
+| -------- | ------------------------------------------------------------- | :--------------------------------------- | --------------------------------------------------------------------------------------- |
+| C        | [CavEX](https://github.com/xtreme8000/cavex)                  | <Badge type="warning" text="Inactive" /> | [xtreme8000](https://github.com/xtreme8000)                                             |
+| Hare     | [betamine](https://git.sr.ht/~sircmpwn/betamine/)             | <Badge type="warning" text="Inactive" /> | [~sircmpwn](https://git.sr.ht/~sircmpwn/)                                               |
+| C++      | [Betrock++](https://github.com/OpenBetaGroup/BetrockPlusPlus) | <Badge type="tip" text="Active" />       | [Pixel Brush](https://pixelbrush.dev) & [JcbbcEnjoyer](https://github.com/JcbbcEnjoyer) |
+| Zig      | [MainCraft](https://github.com/Guigui220D/MainCraft)          | <Badge type="warning" text="Inactive" /> | [Guillaume D.](https://github.com/Guigui220D)                                           |
+| C#       | [TrueCraft](https://github.com/ddevault/TrueCraft)            | <Badge type="warning" text="Archived" /> | [ddevault](https://github.com/ddevault)                                                 |
+| C#       | [betasharp](https://git.gay/betasharp-official/betasharp)     | <Badge type="tip" text="Active" />       | [Fazin85](https://github.com/Fazin85)                                                   |
+| GDScript | [Betadot](https://github.com/OfficialPixelBrush/Betadot)      | <Badge type="warning" text="Inactive" /> | [Pixel Brush](https://pixelbrush.dev)                                                   |
 
 Check the [Minecraft Wiki](https://minecraft.wiki/w/Tutorial:Programs_and_editors/Client_reimplementations) for more clients.
 
@@ -31,7 +31,7 @@ Servers that can accept connections from Minecraft Beta 1.7.3-compatible clients
 | Language | Project                                                                       | Notes /State                                                        | Creator                                                                                             |
 | -------- | ----------------------------------------------------------------------------- | :------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | Go       | [retromc](https://github.com/esora512/retromc/tree/dev)                       | <Badge type="tip" text="Active" /><Badge type="info" text="Fork" /> | [esora512](https://github.com/esora512) (originally by [leNicDev](https://github.com/leNicDev))     |
-| C++      | [Betrock++](https://github.com/OfficialPixelBrush/BetrockPlusPlus)            | <Badge type="tip" text="Active" />                                  | [Pixel Brush](https://pixelbrush.dev) & [JcbbcEnjoyer](https://github.com/JcbbcEnjoyer)             |
+| C++      | [Betrock++](https://github.com/OpenBetaGroup/BetrockPlusPlus)                 | <Badge type="tip" text="Active" />                                  | [Pixel Brush](https://pixelbrush.dev) & [JcbbcEnjoyer](https://github.com/JcbbcEnjoyer)             |
 | Rust     | [mc173](https://github.com/mindstorm38/mc173)                                 | <Badge type="tip" text="Active" />                                  | [mindstorm38](https://github.com/mindstorm38/)                                                      |
 | Zig      | [Minestalgia](https://github.com/cody-quinn/Minestalgia)                      | <Badge type="warning" text="Inactive" />                            | [cody-quinn](https://codyq.dev/)                                                                    |
 | Java     | [WintyMC](https://github.com/DOh1221/WintyMC/)                                | <Badge type="warning" text="Inactive" />                            | [DOh1221](https://github.com/DOh1221/)                                                              |

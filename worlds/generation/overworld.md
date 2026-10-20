@@ -156,7 +156,7 @@ terrainMap[xyz] = terrainDensity;
 xyz++;
 ```
 
-For more details, check out the implementation used by [Betrock++](https://github.com/OfficialPixelBrush/BetrockPlusPlus/blob/main/src/bpp_shared/world/generator/overworld/chunk_gen.cpp).
+For more details, check out the implementation used by [Betrock++](https://github.com/OpenBetaGroup/BetrockPlusPlus/blob/main/src/bpp_shared/world/generator/overworld/chunk_gen.cpp).
 
 The result of this is placed into a `4x16x4` Double Array that describes our terrain at a reduced scale.
 
