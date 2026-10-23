@@ -21,7 +21,10 @@ This packet is sent after [Pre-Login](./002-pre-login) to finish logging in. The
 | World Seed | Long     | The random seed for terrain generation    |
 | Dimension  | Byte     | The player's spawning dimension           |
 
-The player's dimension is specified as `0` for The Overworld and `-1` for The Nether.
+The player's dimension is specified as `0` for The Overworld, `-1` for The Nether and `1` for Sky.
+
+> [!NOTE]
+> Unlike Overworld, if Sky dimension is used, the whole world is in Sky biome, so grass blocks will not be rendered differently based on client-side world generation. 
 
 ## Serverbound
 
