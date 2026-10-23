@@ -24,7 +24,9 @@ This packet is sent after [Pre-Login](./002-pre-login) to finish logging in. The
 The player's dimension is specified as `0` for The Overworld, `-1` for The Nether and `1` for Sky.
 
 > [!NOTE]
-> Unlike Overworld, if Sky dimension is used, the whole world is in Sky biome, so grass blocks will not be rendered differently based on client-side world generation. 
+> Unlike the Overworld, if the Sky dimension is used,
+> the whole world just uses the sky biome,
+> giving all biome-tinted blocks the same color
 
 ## Serverbound
 
