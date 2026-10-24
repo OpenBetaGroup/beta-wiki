@@ -37,13 +37,15 @@ The nether features:
 
 ## Sky
 
-The coveted sky dimension that later became the end dimension. There exist only fragments of functionality in Beta 1.7.3.
-It is given the numerical Id `1`. It's terrain data would've likely been stored in `world/DIM1` as a result.
+The sky dimension is the unfinished dimension that later became the End. Its numeric ID is `1`. Beta 1.7.3 contains the Sky dimension, biome, and fully working terrain generation code, but there is no way to reach it without client or server modifications.
 
-These are:
+You can pass `1` to the [Login](/networking/packets/001-login) and [Respawn](/networking/packets/009-respawn) packets to have the client join it.
 
-- The "sky" biome, unused under normal circumstances
-- The client properly handling the Dimension Id `1` (Sky) when connecting to a server or respawning (See the [Login](/networking/packets/001-login) and [Respawn](/networking/packets/009-respawn) packets)
+The sky dimension does not implement saving logic, therefore it does not have its own folder like `DIM1`.
+
+![Floating islands in the Sky dimension](images/Sky_Dimension_1.jpg){data-zoomable}
+
+<sub>Screenshot of the Sky dimension. Source: [Minecraft Wiki](https://minecraft.wiki/images/Sky_Dimension_1.jpg).</sub>
 
 ## Further reading:
 
