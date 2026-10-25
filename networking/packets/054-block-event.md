@@ -28,10 +28,10 @@ Note blocks use the packet to indicate they've played a tone. They use the two b
 | Value | Instrument |
 | ----- | ---------- |
 | `0`   | Harp       |
-| `1`   | Bass       |
+| `1`   | Bass Drum  |
 | `2`   | Snare Drum |
 | `3`   | Hi-hat     |
-| `4`   | Bass Drum  |
+| `4`   | Bass       |
 
 ## Piston
 
