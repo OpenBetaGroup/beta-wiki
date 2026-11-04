@@ -116,7 +116,9 @@ $$
 
 For the default chunk size of `16x128x16`, this results in `5` for the horizontal axis and `17` for the vertical one.
 
-$H$ and $T$ are the humidity and temperature values that were generated in the Biome generation step at the current X,Z coordinate. Same goes for $C$ and $D$, which are the continentalness and depth values of the current X,Z coordinate.
+$Y_{water}$ is the global water level, which is `64` by default.
+
+$C_{humi}$ and $C_{temp}$ are the humidity and temperature values that were generated in the Biome generation step at the current X,Z coordinate. Same goes for $N_{cont}$ and $N_{depth}$, which are the continentalness and depth values of the current X,Z coordinate.
 
 #### 2D Noises
 
@@ -125,16 +127,16 @@ The following logic is iterated over along the X and Z axes. It's responsible fo
 1. Put temperature and humditiy together
 
 $$
-h = 1 - (1 - H \cdot T)^4
+h = 1 - (1 - {C_{humi}} \cdot {C_{temp}})^4
 $$
 
 2. Normalize the contientalness values, apply the new humidity value, then clamp into the range `0.0` to `1.0`, then offset by `0.5`.
 
 $$
-CN = 0.5+
+{C_{norm}} = 0.5+
 \operatorname{clamp}
 \left(
-\frac{C+256}{512}\cdot
+\frac{N_{cont}+256}{512}\cdot
 h,
 0,1
 \right)
@@ -143,7 +145,7 @@ $$
 2. Calculate the depth values
 
 $$
-d_0 = \frac{D}{8000}
+d_0 = \frac{N_{depth}}{8000}
 $$
 
 $$
@@ -171,10 +173,10 @@ $$
 3. Force continentalness to `0.0` if depth is negative.
 
 $$
-CN =
+C_{norm} =
 \begin{cases}
 0 & d_2<0\\
-CN & d_2\geq0
+C_{norm} & d_2\geq0
 \end{cases}
 $$
 
@@ -183,18 +185,18 @@ This leaves the continentalness in a range of `0.5` to `1.5`, unless a negative 
 4. Calculate the base terrain height
 
 $$
-B=\frac{Y_{\max}}{2}+\frac{Y_{\max}}{4}d_3
+Y_{base}=\frac{Y_{\max}}{2}+\frac{Y_{\max}}{4}d_3
 $$
 
 #### 3D Noises
 
 After this follow the 3D noises. These are iterated over bottom to top, inside of the above X,Z ordered iteration. $y$ obviously represents the current vertical coordinate.
-$L$, $H$ and $S$ are our current Low, High and Selector noise samples. $d$ is our density offset, and $T_d$ is our final terrain density.
+$N_{low}$, $N_{high}$ and $N_{selector}$ are our current Low, High and Selector noise samples. $\rho$ represents our final terrain density.
 
 1. Combine our previously calculated values
 
 $$
-d_0 = \frac{12(y-B)}{CN}
+d_0 = \frac{12(y-Y_{base})}{C_{norm}}
 $$
 
 2. If they turn out negative, multiply by `4.0`
@@ -210,15 +212,15 @@ $$
 3. Normalize our low, high and selector noise samples
 
 $$
-l = \frac{L}{512}
+l = \frac{N_{low}}{512}
 $$
 
 $$
-h = \frac{H}{512}
+h = \frac{N_{high}}{512}
 $$
 
 $$
-s = \frac{S / 10 + 1}{2}
+s = \frac{N_{selector} / 10 + 1}{2}
 $$
 
 4. Linearly interpolate (lerp) between the low and high noise in the places where the selector noise transitions between `0.0` and `1.0`
@@ -256,11 +258,9 @@ Minecraft uses [Trillinear interpolation](https://en.wikipedia.org/wiki/Trilinea
 
 The placed block is determined as follows.
 
-1. Any block below the water level (`64`), is water or ice, if the temperature of the column is less than `0.5`
-2. If the current terrain noise sample is greater than `0.0`, stone will be placed there
+1. Any block below the water level ($Y_{water}$), is water or ice. It's only ice if the temperature ($C_{temp}$) of the column is less than `0.5`
+2. If the current interpolated density sample ($\rho_i$) is greater than `0.0`, stone will be placed there
 3. All other blocks default to being air
-
-Some of the values appear to modify themselves for the next loop.
 
 |                                            Terrain                                            |                                                   Terrain (water)                                                   |
 | :-------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------: |
@@ -293,17 +293,15 @@ After the terrain shape has been generated, the chunk is transformed further by 
 
 The chunk is now iterated over in x-z order.
 
-1. The biome for the specified column is read ($BI$)
-2. Its checked if sand is possible to be placed here ($SA$)
-3. Its checked if gravel is possible to be placed here ($GA$)
-4. An integer is generated for if stone can be placed here ($SD$)
-5. The biomes appropriate top ($TB$) and filler ($FB$) block is chosen (e.g. Grass and Dirt)
+1. The biome for the specified column is read ($C_{biome}$)
+2. Its checked if sand is possible to be placed here ($A_{sand}$)
+3. Its checked if gravel is possible to be placed here ($A_{gravel}$)
+4. An integer is generated for if stone can be placed here ($A_{stone}$, $D_{stone}$)
+5. The biomes appropriate top ($B_{top}$) and filler ($B_{filler}$) block is chosen (e.g. Grass and Dirt)
 
 #### Y Logic
 
-For this the current block column is iterated over from top to bottom, from `127` down to `0`.
-
-$B$ is the current block value.
+For this the current block column is iterated over from top to bottom, from `127` down to `0`. $B_{block}$ is the current block value.
 
 1. Check if bedrock can be placed. This utilizes a number from the Java PRNG ($R$) between `0` and `4`.
 
@@ -313,53 +311,52 @@ $$
 
 If bedrock gets placed, we just continue on to the next $y$ value.
 
-2. If the current block ($B$) is air, set $SD$ to `-1.0`, and continue onto the next $y$ value.
+2. If the current block ($B_{block}$) is air, set $D_{stone}$ to `-1.0`, and continue onto the next $y$ value.
 
 $$
-SD =
+D_{stone} =
 \begin{cases}
--1 & Air\\
-SD & Other \\
+-1 & B_{block} = Air\\
+D_{stone} & B_{block} \neq Air \\
 \end{cases}
 $$
 
-3. If the current block ($B$) is not stone, continue onto the next $y$ value.
+3. If the current block ($B_{block}$) is not stone, continue onto the next $y$ value.
 
 4. The following (to be mathified)
 
 ```cpp
-if (sd == -1) {
-  if (stoneActive <= 0) {
-    tb = BLOCK_AIR;
-    fb = BLOCK_STONE;
-  } else if (y >= WATER_LEVEL - 4 && y <= WATER_LEVEL + 1) {
+if (d_stone == -1) {
+  if (a_stone <= 0) {
+    b_top = Air;
+    b_filler = Stone;
+  } else if (y >= y_water - 4 && y <= y_water + 1) {
     // If we're close to the water level, apply gravel and sand
-    tb = GetTopBlock(biome);
-    fb = GetFillerBlock(biome);
-    if (ga) {
-      tb = BLOCK_AIR;
-      fb = BLOCK_GRAVEL;
+    b_top = GetTopBlock(c_biome);
+    b_fillter = GetFillerBlock(c_biome);
+    if (a_gravel) {
+      b_top = Air;
+      b_filler = Gravel;
     }
-    if (sa) {
-      tb = BLOCK_SAND;
-      fb = BLOCK_SAND;
+    if (a_sand) {
+      b_top = Sand;
+      b_filler = Sand;
     }
   }
   // Add water if we're below water level
-  if (y < WATER_LEVEL && tb == BLOCK_AIR) {
-    tb = BLOCK_WATER_STILL;
-  }
-  sd = stoneActive;
-  if (y >= WATER_LEVEL - 1)
-    SetBlock(tb, position);
+  if (y < y_water && b_top == Air)
+    b_top = Water;
+  d_stone = a_stone;
+  if (y >= y_water - 1)
+    SetBlock(b_top, position);
   else
-    SetBlock(fb, position);
-} else if (sd > 0) {
-  --sd;
-  SetBlock(fb, position);
-  if (sd == 0 && fb == BLOCK_SAND) {
-    sd = rand.nextInt(4);
-    fb = BLOCK_SANDSTONE;
+    SetBlock(b_filler, position);
+} else if (d_stone > 0) {
+  --d_stone;
+  SetBlock(b_filler, position);
+  if (d_stone == 0 && b_filler == Sand) {
+    d_stone = rand.nextInt(4);
+    f_filler = Sandstone;
   }
 }
 ```
