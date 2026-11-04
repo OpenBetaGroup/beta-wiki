@@ -13,68 +13,31 @@ The generation described in this section will explain how Minecraft Beta 1.7.3 d
 > [!NOTE]
 > In any visualizations, the shown chunks range from `-1,-1` to `1,1`. Additionally, up is always towards **Negative Z**, while right is always towards **Positive X**.
 
-## History
+> [!WARNING]
+> This page is undergoing a large rewrite! For that reason, some info may be missing, even if it was once here before!
 
-The first version to have the Beta-era generator was Alpha 1.2.0, and it was used up until Beta 1.7.3.
+## Initialization
 
-However, we can see that the general shape of the terrain remains the same by using the same seed and spawn location in Alpha 1.1.2 (pre-rework), Alpha 1.2.3 (post-rework) and Beta 1.7.3.
+Before any terrain generation can happen, the generator needs to be initialized in a very specific order. This is due to all of the noise generators relying on a shared [PRNG](/technical/javaFeatures#random) for generating their permutation table. This is where the **world seed** is fed in.
 
-| A1.1.2                                          | A1.2.3                                          |
-| ----------------------------------------------- | ----------------------------------------------- |
-| ![](../images/history/a112.webp){data-zoomable} | ![](../images/history/a123.webp){data-zoomable} |
+## Noise Generators
 
-This similar pre-1.2.0 generation dates all the way back to Infdev 20100624, before which the world generation looked entirely different.
+The overworld generator makes use of two types of noise generator: Perlin noise and Simplex noise. The perlin noise generators are used for terrain, while the simplex noise generators are used for climate and biome generation.
 
-| Inf20100624                                           | A1.1.2                                          |
-| ----------------------------------------------------- | ----------------------------------------------- |
-| ![](../images/history/infdevPack.webp){data-zoomable} | ![](../images/history/a112.webp){data-zoomable} |
+### Terrain noises
 
-Facing the other way reveals some of the more glaring differences between the generators.
+8 [Octaved Perlin Noise Generators](/technical/noise) are used by the overworld generator. Due to needing to be initilaized by a shared PRNG object, their order is presented in the order they're seeded in.
 
-| A1.1.2                                               | A1.2.3                                               |
-| ---------------------------------------------------- | ---------------------------------------------------- |
-| ![](../images/history/a112_pack.webp){data-zoomable} | ![](../images/history/a123_pack.webp){data-zoomable} |
-
-Between Alpha 1.2.3 and Beta 1.7.3 there only exist minor differences, mainly relating to the feature generation.
-
-| A1.2.3                                               | B1.7.3                                               |
-| ---------------------------------------------------- | ---------------------------------------------------- |
-| ![](../images/history/a123_pack.webp){data-zoomable} | ![](../images/history/b173_pack.webp){data-zoomable} |
-
-## Biomes
-
-To find out more about what biomes exist and how they're defined, check out [the biomes page](biomes)./
-
-This process uses 3 octaved [Simplex Noise](/technical/noise#simplex-noise) generators called Temperature, Humidity and Weirdness. This process is described [here](biomes#biome-noise).
-
-|                                               Temperature                                               |                                             Humidity                                              |                                              Weirdness                                               |
-| :-----------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
-| <img src="../images/biome/temperaturePost.png" alt="Temperature map" style="width: 100%;" class="zoom"> | <img src="../images/biome/humidityPost.png" alt="Humidity map" style="width: 100%;" class="zoom"> | <img src="../images/biome/biomeWeirdness.png" alt="Weirdness map" style="width: 100%;" class="zoom"> |
-
-<sub>Temperature, humidity and weirdness values after being modified by this function. These values are in the `0.0 - 2.0` range.</sub>
-
-With this a `16x16` Biome Array is generated, where any block column can contain any of the 13 Biomes.
-
-|                                                  Foliage Colors                                                   |                                                Map Colors                                                 |
-| :---------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: |
-| <img src="../images/biome/terrainFoliage.png" alt="Biomes with foliage colors" style="width: 100%;" class="zoom"> | <img src="../images/biome/terrainMap.png" alt="Biomes with map colors" style="width: 100%;" class="zoom"> |
-
-<sub>Biomes colored as per the [biomes](biomes#biome-list) page.</sub>
-
-## Terrain Shape
-
-### Noise Octaves
-
-The Beta 1.7.3 terrain generator has a shared [Pseudorandom Number Generator](/technical/javaFeatures#random), alongside 8 [Octaved Perlin Noise Generators](/technical/noise), 7 of which are relevant for world generation.
-
-| Generator          | Octaves |                                               Scale |
-| :----------------- | ------- | --------------------------------------------------: |
-| Low Noise          | `16`    |                       `(684.412, 684.412, 684.412)` |
-| High Noise         | `16`    |                       `(684.412, 684.412, 684.412)` |
-| Selector Noise     | `8`     | `(684.412 / 80.0, 684.412 / 160.0, 684.412 / 80.0)` |
-| Continentalness    | `10`    |                                    `(1.121, 1.121)` |
-| Depth Noise        | `16`    |                                    `(200.0, 200.0)` |
-| Tree Density Noise | `8`     |                                          (variable) |
+| Generator          | Octaves |
+| :----------------- | ------- | 
+| Low Noise          | `16`    |
+| High Noise         | `16`    |
+| Selector Noise     | `8`     |
+| Sand & Gravel Noise   | `4`     |
+| Stone Noise | `4`     |
+| Continentalness    | `10`    |
+| Depth Noise        | `16`    |
+| Tree Density        | `8`    |
 
 ::: tip MISSING
 Where does `684.412` come from?? Find a source on this!
@@ -94,11 +57,41 @@ Where $4$ is the horizontal spacing between blocks (due to the $\frac{1}{4}$ sca
 
 <sub>Colors adjusted be more visible.</sub>
 
-Continentalness and depth are 2D, while low, high and selector noise are 3D. As a result, only the lowest slice of each is shown. Tree density is 2D as well, but only used during the [population stage](population#trees) for trees.
+Continentalness and depth are 2D, while low, high and selector noise are 3D. As a result, only the lowest slice of each is shown here. Tree density is 2D as well, but only used during the [population stage](population#trees) for trees.
 
-### Terrain Noise
+## Chunk Generation Pipeline
 
-The terrain noise is for calculating the density of the terrain throughout the chunk.
+After the generator has been initialized, chunks are generated in a few discrete steps.
+
+1. [Generate the Biomes](#biome-generation)
+2. [Determine the initial terrain density](#terrain-density)
+3. [Turn the terrain density into the base terrain](#base-terrain)
+4. [Replace surface blocks with biome-dependent ones](#biome-surface-blocks)
+5. [Carve caves into the terrain](#cave-carving)
+
+## Biome Generation
+
+To find out more about what biomes exist and how they're defined, check out [the biomes page](biomes).
+
+This process uses 3 octaved [Simplex Noise](/technical/noise#simplex-noise) generators called Temperature, Humidity and Weirdness. This process is described [here](biomes#biome-noise).
+
+|                                               Temperature                                               |                                             Humidity                                              |                                              Weirdness                                               |
+| :-----------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
+| <img src="../images/biome/temperaturePost.png" alt="Temperature map" style="width: 100%;" class="zoom"> | <img src="../images/biome/humidityPost.png" alt="Humidity map" style="width: 100%;" class="zoom"> | <img src="../images/biome/biomeWeirdness.png" alt="Weirdness map" style="width: 100%;" class="zoom"> |
+
+<sub>Temperature, humidity and weirdness values after being modified by this function. These values are in the `0.0 - 2.0` range.</sub>
+
+With this a `16x16` Biome Array is generated, where any block column can contain any of the 13 Biomes.
+
+|                                                  Foliage Colors                                                   |                                                Map Colors                                                 |
+| :---------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: |
+| <img src="../images/biome/terrainFoliage.png" alt="Biomes with foliage colors" style="width: 100%;" class="zoom"> | <img src="../images/biome/terrainMap.png" alt="Biomes with map colors" style="width: 100%;" class="zoom"> |
+
+<sub>Biomes colored as per the [biomes](biomes#biome-list) page.</sub>
+
+## Terrain Density
+
+The terrain density is used to determine where solid terrain blocks are placed, primarily stone. It provides the base terrain that later generation stages build ontop of.
 
 #### Constants
 
@@ -252,14 +245,37 @@ $$
 
 The result of this is placed into our `5x17x5` array of 64-bit floating point values.
 
-### Interpolation
+### Base Terrain
 
-Minecraft uses [Trillinear interpolation](https://en.wikipedia.org/wiki/Trilinear_interpolation) to interpolate between the generated density values, to scale them up to the final `16x128x16` chunk size.
+The base terrain density is initially determined using [trillinear interpolated](https://en.wikipedia.org/wiki/Trilinear_interpolation) samples of our low-quality terrain density, iterating over the full `16x128x16` volume.
 
-The placed block is determined as follows.
+This gives us an upscaled set of values we can determine our base terrain with.
 
-1. Any block below the water level ($Y_{water}$), is water or ice. It's only ice if the temperature ($C_{temp}$) of the column is less than `0.5`
+1. Any block below the water level ($Y_{water}$), is water. Water blocks at the water surface ($Y_{water} - 1$) can become ice,  if the temperature ($C_{temp}$) of the column is less than `0.5`
+$$
+B_{final} = 
+\begin{cases}
+Water & y < Y_{water}\\
+Air & y \geq Y_{water}\\
+\end{cases}
+$$
+$$
+B_{final} = 
+\begin{cases}
+Ice & y < (Y_{water} - 1) \land C_{temp} < 0.5 \\
+Air/Water &  otherwise\\
+\end{cases}
+$$
+
+
 2. If the current interpolated density sample ($\rho_i$) is greater than `0.0`, stone will be placed there
+$$
+B_{final} = 
+\begin{cases}
+Stone & \rho_i > 0\\
+Air/Water/Ice &  \rho_i \leq 0 \\
+\end{cases}
+$$
 3. All other blocks default to being air
 
 |                                            Terrain                                            |                                                   Terrain (water)                                                   |
@@ -269,7 +285,7 @@ The placed block is determined as follows.
 <sub>Highest stone blocks. Color values have been tweaked to be more readable.
 Blocks at or below water level are marked in blue.</sub>
 
-## Biome Blocks
+## Biome Surface Blocks
 
 ::: tip MISSING
 TODO: The following still contains code!
@@ -295,8 +311,23 @@ The chunk is now iterated over in x-z order.
 
 1. The biome for the specified column is read ($C_{biome}$)
 2. Its checked if sand is possible to be placed here ($A_{sand}$)
+
+$$
+A_{sand} = N_{sand} + R_{double} \cdot 0.2 > 0
+$$
+
 3. Its checked if gravel is possible to be placed here ($A_{gravel}$)
-4. An integer is generated for if stone can be placed here ($A_{stone}$, $D_{stone}$)
+
+$$
+A_{gravel} = N_{gravel} + R_{double} \cdot 0.2 > 3.0
+$$
+
+4. An integer is generated for if stone can be placed here ($A_{stone}$)
+
+$$
+A_{\text{stone}} = \frac{N_{\text{stone}}}{3}+3+(R_{\text{double}}\cdot0.25)
+$$
+
 5. The biomes appropriate top ($B_{top}$) and filler ($B_{filler}$) block is chosen (e.g. Grass and Dirt)
 
 #### Y Logic
@@ -306,7 +337,7 @@ For this the current block column is iterated over from top to bottom, from `127
 1. Check if bedrock can be placed. This utilizes a number from the Java PRNG ($R$) between `0` and `4`.
 
 $$
-y\leq R
+y\leq R_{int}(5)
 $$
 
 If bedrock gets placed, we just continue on to the next $y$ value.
@@ -323,45 +354,93 @@ $$
 
 3. If the current block ($B_{block}$) is not stone, continue onto the next $y$ value.
 
-4. The following (to be mathified)
+4. From here, the chosen behavior splits based on whether the stone depth ($D_{stone}$) is `-1` or greater than `0`. If neither are true ($D_{stone} = 0$), continue onto the next $y$ value.
 
-```cpp
-if (d_stone == -1) {
-  if (a_stone <= 0) {
-    b_top = Air;
-    b_filler = Stone;
-  } else if (y >= y_water - 4 && y <= y_water + 1) {
-    // If we're close to the water level, apply gravel and sand
-    b_top = GetTopBlock(c_biome);
-    b_fillter = GetFillerBlock(c_biome);
-    if (a_gravel) {
-      b_top = Air;
-      b_filler = Gravel;
-    }
-    if (a_sand) {
-      b_top = Sand;
-      b_filler = Sand;
-    }
-  }
-  // Add water if we're below water level
-  if (y < y_water && b_top == Air)
-    b_top = Water;
-  d_stone = a_stone;
-  if (y >= y_water - 1)
-    SetBlock(b_top, position);
-  else
-    SetBlock(b_filler, position);
-} else if (d_stone > 0) {
-  --d_stone;
-  SetBlock(b_filler, position);
-  if (d_stone == 0 && b_filler == Sand) {
-    d_stone = rand.nextInt(4);
-    f_filler = Sandstone;
-  }
-}
-```
+##### $D_{stone} > 0$:
 
-## Caves
+$$
+D_{stone} = D_{stone} - 1
+$$
+$$
+B_{final} = B_{filler}
+$$
+$$
+(D_{stone}, B_{filler}) =
+\begin{cases}
+(R_{int}(4), Sandstone) & D_{stone} = 0 \land B_{filler} = Sand \\
+(D_{stone}, B_{filler}) & otherwise \\
+\end{cases}
+$$
+
+Then we continue onto the next $y$ value.
+
+##### $D_{stone} = -1$:
+
+1. Top and filler selection is done based on stone noise. This is also where erosions are generated.
+$$
+(B_{\text{top}},B_{\text{filler}})
+=
+\begin{cases}
+(\text{Air},\text{Stone})
+& A_{\text{stone}}\leq 0
+\\[4pt]
+(B_{\text{top}}^{\text{biome}},B_{\text{filler}}^{\text{biome}})
+&
+A_{\text{stone}}>0
+\land
+Y_{\text{water}}-4\leq y\leq Y_{\text{water}}+1
+\\[4pt]
+(B_{\text{top}},B_{\text{filler}})
+& \text{otherwise}
+\end{cases}
+$$
+
+2. Surface sand and Gravel placements are deteremined
+$$
+(B_{\text{top}},B_{\text{filler}})
+=
+\begin{cases}
+(\text{Air},\text{Gravel}) & A_{\text{gravel}}\\
+(B_{\text{top}},B_{\text{filler}}) & \text{otherwise}
+\end{cases}
+$$
+
+$$
+(B_{\text{top}},B_{\text{filler}})
+\leftarrow
+\begin{cases}
+(\text{Sand},\text{Sand}) & A_{\text{sand}}\\
+(B_{\text{top}},B_{\text{filler}}) & \text{otherwise}
+\end{cases}
+$$
+
+3. Further water placements are determined
+$$
+B_{\text{top}}=
+\begin{cases}
+\text{Water}
+& y<Y_{\text{water}}
+\land B_{\text{top}}=\text{Air}\\
+B_{\text{top}} & \text{otherwise}
+\end{cases}f
+$$
+
+4. Lastly, the top and filler blocks are placed
+$$
+D_{\text{stone}}= A_{\text{stone}}
+$$
+
+$$
+B(y)=
+\begin{cases}
+B_{\text{top}} & y\geq Y_{\text{water}}-1\\
+B_{\text{filler}} & y<Y_{\text{water}}-1
+\end{cases}
+$$
+
+This finishes up the initial biome-based block layers.
+
+## Cave carving
 
 See the [cave generation wiki page](./caves)
 
@@ -383,3 +462,31 @@ Continue onto the [population page](population) to find out more.
 - [Release 1.0 Generation](https://github.com/PhoenixVX/golden-age-wiki/blob/main/minecraft/genlayer/sequence/r100.md)
 - [Release 1.1 Generation](https://github.com/PhoenixVX/golden-age-wiki/blob/main/minecraft/genlayer/sequence/r11.md)
 - [Release 1.2 Generation](https://github.com/PhoenixVX/golden-age-wiki/blob/main/minecraft/genlayer/sequence/r12.md)
+
+### History
+
+The first version to have the Beta-era generator was Alpha 1.2.0, and it was used up until Beta 1.7.3.
+
+However, we can see that the general shape of the terrain remains the same by using the same seed and spawn location in Alpha 1.1.2 (pre-rework), Alpha 1.2.3 (post-rework) and Beta 1.7.3.
+
+| A1.1.2                                          | A1.2.3                                          |
+| ----------------------------------------------- | ----------------------------------------------- |
+| ![](../images/history/a112.webp){data-zoomable} | ![](../images/history/a123.webp){data-zoomable} |
+
+This similar pre-1.2.0 generation dates all the way back to Infdev 20100624, before which the world generation looked entirely different.
+
+| Inf20100624                                           | A1.1.2                                          |
+| ----------------------------------------------------- | ----------------------------------------------- |
+| ![](../images/history/infdevPack.webp){data-zoomable} | ![](../images/history/a112.webp){data-zoomable} |
+
+Facing the other way reveals some of the more glaring differences between the generators.
+
+| A1.1.2                                               | A1.2.3                                               |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| ![](../images/history/a112_pack.webp){data-zoomable} | ![](../images/history/a123_pack.webp){data-zoomable} |
+
+Between Alpha 1.2.3 and Beta 1.7.3 there only exist minor differences, mainly relating to the feature generation.
+
+| A1.2.3                                               | B1.7.3                                               |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| ![](../images/history/a123_pack.webp){data-zoomable} | ![](../images/history/b173_pack.webp){data-zoomable} |
