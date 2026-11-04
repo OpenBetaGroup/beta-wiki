@@ -76,6 +76,18 @@ The Beta 1.7.3 terrain generator has a shared [Pseudorandom Number Generator](/t
 | Depth Noise        | `16`    |                                    `(200.0, 200.0)` |
 | Tree Density Noise | `8`     |                                          (variable) |
 
+::: tip MISSING
+Where does `684.412` come from?? Find a source on this!
+
+The best theory we have right now is
+
+$$
+684.412 = 4 \times 2^{15} \times 0.005221649073064327
+$$
+
+Where $4$ is the horizontal spacing between blocks (due to the $\frac{1}{4}$ scale), $2^{15}$ is the frequency multiplier of the 16th octave, and $0.005221649073064327$ is the base noise frequency.
+:::
+
 |                                    Low                                     |                                     High                                     |                                       Selector                                       |                                            Continental                                             |                                     Depth                                      |
 | :------------------------------------------------------------------------: | :--------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
 | <img src="../images/terrain/low.png" alt="Low noise" style="width: 100%;"> | <img src="../images/terrain/high.png" alt="High noise" style="width: 100%;"> | <img src="../images/terrain/selector.png" alt="Selector noise" style="width: 100%;"> | <img src="../images/terrain/continentalness.png" alt="Continentalness noise" style="width: 100%;"> | <img src="../images/terrain/depth.png" alt="Depth noise" style="width: 100%;"> |
@@ -86,102 +98,167 @@ Continentalness and depth are 2D, while low, high and selector noise are 3D. As 
 
 ### Terrain Noise
 
-The exact algorithm is a bit annoying to explain and feels very vibes-based. A simplified explanation boils down to the following process.
+The terrain noise is for calculating the density of the terrain throughout the chunk.
 
-The following code is iterated over along the X,Z axes via a set of for loops. It's responsible for sampling the 2D noises.
+#### Constants
 
-```cpp
-// Get temperature values
-double temp = temperature[];
-double humi = humidity[] * temp;
-humi = 1.0 - humi;
-humi *= humi;
-humi *= humi;
-humi = 1.0 - humi;
-// Sample continentalness noise
-double cn = (continentalness[xz] + 256.0) / 512.0;
-cn *= humi;
-if (cn > 1.0)
-  cn = 1.0;
-if (cn < 0.0)
-  cn = 0.0;
-cn += 0.5;
-// Sample depth noise
-double dn = depthNoise[xz] / 8000.0;
-if (dn < 0.0)
-  dn = -dn * 0.3;
-dn = dn * 3.0 - 2.0;
-if (dn < 0.0) {
-  dn /= 2.0;
-  if (dn < -1.0)
-    dn = -1.0;
-  dn /= 1.4;
-  dn /= 2.0;
-  cn = 0.0;
-} else {
-  if (dn > 1.0)
-    dn = 1.0;
-  dn /= 8.0;
-}
-dn = dn * double(max.y) / 16.0;
-double elevationOffset = double(max.y) / 2.0 + dn * 4.0;
-++xz;
-```
+Before we get started, we must discuss some of the relevant constants for this section.
 
-After this follow the 3D noises. These are iterated over bottom to top.
+Firstly, the maximum x, y and z values. Our noises are sampled at `1/4` resolution, but to get the cross-boundary overlap, we sample it at `1/4 + 1`
 
-```cpp
-double terrainDensity = 0.0;
-double densityOffset = (double(y) - elevationOffset) * 12.0 / cn;
-if (densityOffset < 0.0)
-  densityOffset *= 4.0;
-// Sample the noises
-double ln = lowNoise[xyz] / 512.0;
-double hn = highNoise[xyz] / 512.0;
-double sn = (selectorNoise[xyz] / 10.0 + 1.0) / 2.0;
-// Lerp between low and high noise
-if (sn < 0.0)
-  terrainDensity = ln;
-else if (sn > 1.0)
-  terrainDensity = hn;
-else
-  terrainDensity = ln + (hn - ln) * sn;
-terrainDensity -= densityOffset;
-// Reduce terrain density towards the top of the world
-if (y > max.y - 4) {
-  double heightEdgeFade = double(float(y - (max.y - 4)) / 3.0f);
-  terrainDensity = (terrainDensity * (1.0 - heightEdgeFade)) + (-10.0 * heightEdgeFade);
-}
-terrainMap[xyz] = terrainDensity;
-xyz++;
-```
+$$
+X_{\max},Z_{\max} = \frac{ChunkWidth}{4} + 1
+$$
 
-For more details, check out the implementation used by [Betrock++](https://github.com/OpenBetaGroup/BetrockPlusPlus/blob/main/src/bpp_shared/world/generator/overworld/chunk_gen.cpp).
+$$
+Y_{\max} = \frac{ChunkHeight}{4} + 1
+$$
 
-The result of this is placed into a `4x16x4` Double Array that describes our terrain at a reduced scale.
+For the default chunk size of `16x128x16`, this results in `5` for the horizontal axis and `17` for the vertical one.
+
+$H$ and $T$ are the humidity and temperature values that were generated in the Biome generation step at the current X,Z coordinate. Same goes for $C$ and $D$, which are the continentalness and depth values of the current X,Z coordinate.
+
+#### 2D Noises
+
+The following logic is iterated over along the X and Z axes. It's responsible for sampling the 2D noises, normalizing and combining them.
+
+1. Put temperature and humditiy together
+
+$$
+h = 1 - (1 - H \cdot T)^4
+$$
+
+2. Normalize the contientalness values, apply the new humidity value, then clamp into the range `0.0` to `1.0`, then offset by `0.5`.
+
+$$
+CN = 0.5+
+\operatorname{clamp}
+\left(
+\frac{C+256}{512}\cdot
+h,
+0,1
+\right)
+$$
+
+2. Calculate the depth values
+
+$$
+d_0 = \frac{D}{8000}
+$$
+
+$$
+d_1 =
+\begin{cases}
+-0.3 \cdot d_0 & d_0<0\\
+d_0 & d_0\geq0
+\end{cases}
+$$
+
+$$
+d_2=3 \cdot d_1 - 2
+$$
+
+$$
+d_3 =
+\begin{cases}
+\frac{\operatorname{clamp}(d_2,-1,0)}{5.6}
+& d_2<0\\[6pt]
+\frac{\min(d_2,1)}{8}
+& d_2\geq0
+\end{cases}
+$$
+
+3. Force continentalness to `0.0` if depth is negative.
+
+$$
+CN =
+\begin{cases}
+0 & d_2<0\\
+CN & d_2\geq0
+\end{cases}
+$$
+
+This leaves the continentalness in a range of `0.5` to `1.5`, unless a negative depth forces it to `0.0`. This is the bit of math that prevents monoliths from happening.
+
+4. Calculate the base terrain height
+
+$$
+B=\frac{Y_{\max}}{2}+\frac{Y_{\max}}{4}d_3
+$$
+
+#### 3D Noises
+
+After this follow the 3D noises. These are iterated over bottom to top, inside of the above X,Z ordered iteration. $y$ obviously represents the current vertical coordinate.
+$L$, $H$ and $S$ are our current Low, High and Selector noise samples. $d$ is our density offset, and $T_d$ is our final terrain density.
+
+1. Combine our previously calculated values
+
+$$
+d_0 = \frac{12(y-B)}{CN}
+$$
+
+2. If they turn out negative, multiply by `4.0`
+
+$$
+d =
+\begin{cases}
+4 \cdot d_0 & d_0<0\\
+d_0 & d_0\geq0
+\end{cases}
+$$
+
+3. Normalize our low, high and selector noise samples
+
+$$
+l = \frac{L}{512}
+$$
+
+$$
+h = \frac{H}{512}
+$$
+
+$$
+s = \frac{S / 10 + 1}{2}
+$$
+
+4. Linearly interpolate (lerp) between the low and high noise in the places where the selector noise transitions between `0.0` and `1.0`
+
+$$
+T =
+\begin{cases}
+l & s<0\\
+h & s>1\\
+l+(h-l) \cdot s & 0\leq s\leq1
+\end{cases}
+$$
+
+5. Subtract the density offset
+
+$$
+T_d=T-d
+$$
+
+6. Fade the terrain towards the world ceiling
+
+$$
+\rho(y)=
+\begin{cases}
+T_d & y\leq Y_{\max}-4\\[4pt]
+T_d(1-f)-10 \cdot f & y>Y_{\max}-4
+\end{cases}
+$$
+
+The result of this is placed into a `5x17x5` array of 64-bit floating point numbers that describes the density of the terrain at a reduced scale, with overlap between chunks.
 
 ### Interpolation
 
 Minecraft uses [Trillinear interpolation](https://en.wikipedia.org/wiki/Trilinear_interpolation) to interpolate between the generated density values, to scale them up to the final `16x128x16` chunk size.
 
-The actual decision which blocks are solid or not comes down to the following function.
+The placed block is determined as follows.
 
-```c
-uint8_t blockType = BLOCK_AIR;
-// If water is too cold, turn it into ice
-double temp = temperature[columnIndex];
-if(y < WATER_LEVEL) {
-  if(temp < 0.5 && y >= WATER_LEVEL - 1) {
-    blockType = BLOCK_ICE;
-  } else {
-    blockType = BLOCK_WATER_STILL;
-  }
-}
-// Decide which blocks are solid or not
-if(noiseValue > 0.0) blockType = BLOCK_STONE;
-// Write to chunk
-SetBlock(blockType, position);
-```
+1. Any block below the water level (`64`), is water or ice, if the temperature of the column is less than `0.5`
+2. If the current terrain noise sample is greater than `0.0`, stone will be placed there
+3. All other blocks default to being air
 
 Some of the values appear to modify themselves for the next loop.
 
@@ -193,6 +270,10 @@ Some of the values appear to modify themselves for the next loop.
 Blocks at or below water level are marked in blue.</sub>
 
 ## Biome Blocks
+
+::: tip MISSING
+TODO: The following still contains code!
+:::
 
 After the terrain shape has been generated, the chunk is transformed further by the Sand, Gravel and Stone Perlin Noise Generators.
 
