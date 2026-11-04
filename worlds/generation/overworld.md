@@ -45,13 +45,13 @@ Between Alpha 1.2.3 and Beta 1.7.3 there only exist minor differences, mainly re
 
 To find out more about what biomes exist and how they're defined, check out [the biomes page](biomes)./
 
-This process uses 3 octaved [Simplex Noise](/technical/noise#simplex-noise) generators called Temperature, Humidity and Variation. This process is described [here](biomes#biome-noise).
+This process uses 3 octaved [Simplex Noise](/technical/noise#simplex-noise) generators called Temperature, Humidity and Weirdness. This process is described [here](biomes#biome-noise).
 
-|                                               Temperature                                               |                                             Humidity                                              |                                              Variation                                               |
+|                                               Temperature                                               |                                             Humidity                                              |                                              Weirdness                                               |
 | :-----------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
-| <img src="../images/biome/temperaturePost.png" alt="Temperature map" style="width: 100%;" class="zoom"> | <img src="../images/biome/humidityPost.png" alt="Humidity map" style="width: 100%;" class="zoom"> | <img src="../images/biome/biomeVariation.png" alt="Variation map" style="width: 100%;" class="zoom"> |
+| <img src="../images/biome/temperaturePost.png" alt="Temperature map" style="width: 100%;" class="zoom"> | <img src="../images/biome/humidityPost.png" alt="Humidity map" style="width: 100%;" class="zoom"> | <img src="../images/biome/biomeWeirdness.png" alt="Weirdness map" style="width: 100%;" class="zoom"> |
 
-<sub>Temperature, humidity and variation values after being modified by this function. These values are in the `0.0 - 2.0` range.</sub>
+<sub>Temperature, humidity and weirdness values after being modified by this function. These values are in the `0.0 - 2.0` range.</sub>
 
 With this a `16x16` Biome Array is generated, where any block column can contain any of the 13 Biomes.
 
