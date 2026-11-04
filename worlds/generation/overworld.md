@@ -226,7 +226,7 @@ $$
 4. Linearly interpolate (lerp) between the low and high noise in the places where the selector noise transitions between `0.0` and `1.0`
 
 $$
-T =
+t =
 \begin{cases}
 l & s<0\\
 h & s>1\\
@@ -237,7 +237,7 @@ $$
 5. Subtract the density offset
 
 $$
-T_d=T-d
+\rho=t-d
 $$
 
 6. Fade the terrain towards the world ceiling
@@ -245,12 +245,12 @@ $$
 $$
 \rho(y)=
 \begin{cases}
-T_d & y\leq Y_{\max}-4\\[4pt]
-T_d(1-f)-10 \cdot f & y>Y_{\max}-4
+\rho & y\leq Y_{\max}-4\\[4pt]
+\rho(1-f)-10 \cdot f & y>Y_{\max}-4
 \end{cases}
 $$
 
-The result of this is placed into a `5x17x5` array of 64-bit floating point numbers that describes the density of the terrain at a reduced scale, with overlap between chunks.
+The result of this is placed into our `5x17x5` array of 64-bit floating point values.
 
 ### Interpolation
 
