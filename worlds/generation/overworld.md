@@ -289,64 +289,77 @@ After the terrain shape has been generated, the chunk is transformed further by 
 
 <sub>Sand, Gravel and Stone noise. Color values have been tweaked to be more readable.</sub>
 
-The chunk is now iterated over in a nested x and z for-loop.
+#### X-Z Logic
 
-1. The biome for the specified column is read
-2. Its checked if sand is possible to be placed here
-3. Its checked if gravel is possible to be placed here
-4. An integer is generated for if stone can be placed here
-5. The biomes appropriate top and filler block is chosen (e.g. Grass and Dirt)
+The chunk is now iterated over in x-z order.
+
+1. The biome for the specified column is read ($BI$)
+2. Its checked if sand is possible to be placed here ($SA$)
+3. Its checked if gravel is possible to be placed here ($GA$)
+4. An integer is generated for if stone can be placed here ($SD$)
+5. The biomes appropriate top ($TB$) and filler ($FB$) block is chosen (e.g. Grass and Dirt)
+
+#### Y Logic
 
 For this the current block column is iterated over from top to bottom, from `127` down to `0`.
 
+$B$ is the current block value.
+
+1. Check if bedrock can be placed. This utilizes a number from the Java PRNG ($R$) between `0` and `4`.
+
+$$
+y\leq R
+$$
+
+If bedrock gets placed, we just continue on to the next $y$ value.
+
+2. If the current block ($B$) is air, set $SD$ to `-1.0`, and continue onto the next $y$ value.
+
+$$
+SD =
+\begin{cases}
+-1 & Air\\
+SD & Other \\
+\end{cases}
+$$
+
+3. If the current block ($B$) is not stone, continue onto the next $y$ value.
+
+4. The following (to be mathified)
+
 ```cpp
-// Place Bedrock at bottom with some randomness
-if (y <= 0 + rand.nextInt(5)) {
-  SetBlock(BLOCK_BEDROCK, position);
-  continue;
-}
-int8_t currentBlock = GetBlock(position);
-// Ignore air
-if (currentBlock == BLOCK_AIR) {
-  stoneDepth = -1;
-  continue;
-}
-// If we counter stone, start replacing it
-if (currentBlock == BLOCK_STONE) {
-  if (stoneDepth == -1) {
-    if (stoneActive <= 0) {
-      topBlock = BLOCK_AIR;
-      fillerBlock = BLOCK_STONE;
-    } else if (y >= WATER_LEVEL - 4 && y <= WATER_LEVEL + 1) {
-      // If we're close to the water level, apply gravel and sand
-      topBlock = GetTopBlock(biome);
-      fillerBlock = GetFillerBlock(biome);
-      if (gravelActive)
-        topBlock = BLOCK_AIR;
-      if (gravelActive)
-        fillerBlock = BLOCK_GRAVEL;
-      if (sandActive)
-        topBlock = BLOCK_SAND;
-      if (sandActive)
-        fillerBlock = BLOCK_SAND;
+if (sd == -1) {
+  if (stoneActive <= 0) {
+    tb = BLOCK_AIR;
+    fb = BLOCK_STONE;
+  } else if (y >= WATER_LEVEL - 4 && y <= WATER_LEVEL + 1) {
+    // If we're close to the water level, apply gravel and sand
+    tb = GetTopBlock(biome);
+    fb = GetFillerBlock(biome);
+    if (ga) {
+      tb = BLOCK_AIR;
+      fb = BLOCK_GRAVEL;
     }
-    // Add water if we're below water level
-    if (y < WATER_LEVEL && topBlock == BLOCK_AIR) {
-      topBlock = BLOCK_WATER_STILL;
+    if (sa) {
+      tb = BLOCK_SAND;
+      fb = BLOCK_SAND;
     }
-    stoneDepth = stoneActive;
-    if (y >= WATER_LEVEL - 1) {
-      SetBlock(topBlock, position);
-    } else {
-      SetBlock(fillerBlock, position);
-    }
-  } else if (stoneDepth > 0) {
-    --stoneDepth;
-    SetBlock(fillerBlock, position);
-    if (stoneDepth == 0 && fillerBlock == BLOCK_SAND) {
-      stoneDepth = rand.nextInt(4);
-      fillerBlock = BLOCK_SANDSTONE;
-    }
+  }
+  // Add water if we're below water level
+  if (y < WATER_LEVEL && tb == BLOCK_AIR) {
+    tb = BLOCK_WATER_STILL;
+  }
+  sd = stoneActive;
+  if (y >= WATER_LEVEL - 1)
+    SetBlock(tb, position);
+  else
+    SetBlock(fb, position);
+} else if (sd > 0) {
+  --sd;
+  SetBlock(fb, position);
+  if (sd == 0 && fb == BLOCK_SAND) {
+    sd = rand.nextInt(4);
+    fb = BLOCK_SANDSTONE;
   }
 }
 ```
