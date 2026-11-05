@@ -46,23 +46,14 @@ $$
 B(t,h)=
 \begin{cases}
 \text{Tundra} & (h' < 0.2 \land t < 0.5) \lor (t < 0.1)\\
-
 \text{Savanna} & h' < 0.2 \land 0.5 \leq t < 0.95 \\
-
-\text{Desert} & h' < 0.2 \land t \geq 0.95 \\[4pt]
-
-\text{Swampland} & h' > 0.5 \land t < 0.7 \\[4pt]
-
-\text{Taiga} & h' \geq 0.2 \land t < 0.5 \\[4pt]
-
-\text{Shrubland} & 0.5 \leq t < 0.97 \land h' < 0.35 \\
-
-\text{Forest} & 0.5 \leq t < 0.97 \land h' \geq 0.35 \\[4pt]
-
+\text{Desert} & h' < 0.2 \land t \geq 0.95 \\
+\text{Swampland} & h' > 0.5 \land t < 0.7 \\
+\text{Taiga} & h' \geq 0.2 \land t < 0.5 \\
+\text{Shrubland} & 0.5 \leq t < 0.97 \land 0.2 \leq h' < 0.35\\
+\text{Forest} & 0.5 \leq t < 0.97 \land h' \geq 0.35 \\
 \text{Plains} & t \geq 0.97 \land h' < 0.45 \\
-
 \text{Seasonal Forest} & t \geq 0.97 \land 0.45 \leq h' < 0.9 \\
-
 \text{Rainforest} & t \geq 0.97 \land h' \geq 0.9
 \end{cases}
 $$
@@ -78,7 +69,7 @@ If mapped to an image, using the foliage/map colors, we get this.
 
 ## Biome Noise
 
-The function which determines what biome is use in a chunk is relatively simple.
+The function which determines what biomes are used in a chunk is relatively simple.
 It mainly uses 3 instances of [octaved simplex noise](/technical/noise#simplex-noise).
 
 ### Initialization
@@ -105,7 +96,7 @@ The base scale and octave frequency factor remain the same throughout biome samp
 
 The current Chunk Coordinate, scaled to Block-Space (multiplied by `16`), is passed in, alongside how many values the generator should return (`16x16` for one chunk) and a scaling factor.
 
-Each of these return a `16x16` array of 64-bit floating point numbers, which're that chunks' temperature, humidity and weirdness values.
+Each of these return a `16x16` array of 64-bit floating point numbers, which're that chunks' initial temperature $(C_{temp})$, humidity ($C_{humi}$) and weirdness ($C_{weird}$) values.
 
 |                                              Temperature                                               |                                             Humidity                                             |                                              Weirdness                                               |
 | :----------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
@@ -113,22 +104,16 @@ Each of these return a `16x16` array of 64-bit floating point numbers, which're 
 
 <sub>Temperature, humidity and weirdness values from chunk `-1,-1` to `1,1`. These values are in the `0.0 - 2.0` range.</sub>
 
-### Biome map
-
 The final biomes for each column are determined by iterating over the `16x16` array and performing the following actions for each entry.
 
 $$
 \begin{aligned}
-w &= 1.1 \cdot \,\mathrm{C_{weird}} + 0.5 \\
-s &= 0.01 \\
-m &= 1.0 - s \\
-t &= (0.15 \cdot \,\mathrm{C_{temp}} + 0.7) \cdot m + w \cdot s \\
-s &= 0.002 \\
-m &= 1.0 - s \\
-h &= (0.15 \cdot \,\mathrm{C_{humi}} + 0.5) \cdot m + w \cdot s \\
-t &= 1.0 - (1.0 - t)^2 \\
-C_{temp} &= \min(1.0,\max(0.0,t)) \\
-C_{humi} &= \min(1.0,\max(0.0,h)) \\
+w &= 1.1 \cdot \,{C_{weird}} + 0.5 \\
+t_0 &= (0.15 \cdot \,{C_{temp}} + 0.7) \cdot (1 - 0.01) + w \cdot 0.01 \\
+h &= (0.15 \cdot \,{C_{humi}} + 0.5) \cdot (1 - 0.002) + w \cdot 0.002 \\
+t_1 &= 1 - (1 - t_0)^2 \\
+C_{temp} &= \min(1,\max(0,t_1)) \\
+C_{humi} &= \min(1,\max(0,h)) \\
 \end{aligned}
 $$
 
