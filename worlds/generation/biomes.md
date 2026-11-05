@@ -40,14 +40,12 @@ $$
 h' = h \cdot t
 $$
 
-Then we determine the actual biome for that position, in a range from `0.0` to `1.0` on each axis.
+Then we determine the actual biome for that combination of temperature and humidity values, in a range from `0.0` to `1.0` on each axis.
 
 $$
 B(t,h)=
 \begin{cases}
-\text{Tundra} & t < 0.1 \\[4pt]
-
-\text{Tundra} & h' < 0.2 \land t < 0.5 \\
+\text{Tundra} & (h' < 0.2 \land t < 0.5) \lor (t < 0.1)\\
 
 \text{Savanna} & h' < 0.2 \land 0.5 \leq t < 0.95 \\
 
@@ -57,9 +55,9 @@ B(t,h)=
 
 \text{Taiga} & h' \geq 0.2 \land t < 0.5 \\[4pt]
 
-\text{Shrubland} & h' \geq 0.2 \land 0.5 \leq t < 0.97 \land h' < 0.35 \\
+\text{Shrubland} & 0.5 \leq t < 0.97 \land h' < 0.35 \\
 
-\text{Forest} & h' \geq 0.2 \land 0.5 \leq t < 0.97 \land h' \geq 0.35 \\[4pt]
+\text{Forest} & 0.5 \leq t < 0.97 \land h' \geq 0.35 \\[4pt]
 
 \text{Plains} & t \geq 0.97 \land h' < 0.45 \\
 
