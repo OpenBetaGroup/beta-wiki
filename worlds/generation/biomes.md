@@ -16,10 +16,10 @@ There exist 13 distinct biomes in Beta 1.7.3. They each have unique properties, 
 
 | Name            | Top Block | Filler Block | Rain | Snow |          Foliage Color          |            Map Color            |
 | :-------------- | :-------: | :----------: | :--: | :--: | :-----------------------------: | :-----------------------------: |
-| Rainforest      |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#1FF458" /> | <ColorSwatch color="#8FA360" /> |
-| Swampland       |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#8BAF48" /> | <ColorSwatch color="#7F9B20" /> |
+| Rainforest      |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#1FF458" /> | <ColorSwatch color="#08FA36" /> |
+| Swampland       |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#8BAF48" /> | <ColorSwatch color="#07F9B2" /> |
 | Seasonal Forest |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#4EE031" /> | <ColorSwatch color="#9BE023" /> |
-| Forest          |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#4EBA31" /> | <ColorSwatch color="#566210" /> |
+| Forest          |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#4EBA31" /> | <ColorSwatch color="#056621" /> |
 | Savanna         |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#4EE031" /> | <ColorSwatch color="#D9E023" /> |
 | Shrubland       |   Grass   |     Dirt     |  ✅  |  ❌  | <ColorSwatch color="#4EE031" /> | <ColorSwatch color="#A1AD20" /> |
 | Taiga           |   Grass   |     Dirt     |  ✅  |  ✅  | <ColorSwatch color="#7BB731" /> | <ColorSwatch color="#2EB153" /> |
@@ -75,7 +75,7 @@ If mapped to an image, using the foliage/map colors, we get this.
 | :--------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------: |
 | <img src="../images/biome/biomesFoliage.png" alt="Foliage Colors" style="width: 100%;" class="zoom"> | <img src="../images/biome/biomesMap.png" alt="Map Colors" style="width: 100%;" class="zoom"> |
 
-<sub>Temperature is X, Humidity is Y. Range is from `0` to `64` (or `0.0` to `1.0`) on both axes. [Notch drew this graph back in 2011.](https://minecraft.wiki/w/File:NotchBiomeGraph.png)
+<sub>Temperature is X, Humidity is Y. Range is from `0` to `63` (or `0.0` to `1.0`) on both axes. [Notch drew this graph back in 2011.](https://minecraft.wiki/w/File:NotchBiomeGraph.png)
 </sub>
 
 ## Biome Noise
@@ -83,15 +83,29 @@ If mapped to an image, using the foliage/map colors, we get this.
 The function which determines what biome is use in a chunk is relatively simple.
 It mainly uses 3 instances of [octaved simplex noise](/technical/noise#simplex-noise).
 
-### Noise Octaves
+### Initialization
+
+The climate noise generators each get their own, independent PRNG object, initilizated with its own seed. $W_{seed}$ represents the world seed.
+
+| PRNG   | Seed |
+| ----------: | :---- |
+| Temperature |  $W_{seed} \cdot 9871$ |
+| Humidity    |  $W_{seed} \cdot 39811$ |
+| Weirdness   |  $W_{seed} \cdot 543321$ |
+
+Then, the noise generators are initialized.
+
+| Generator   | Octaves |                             Base Scale (x,z) | Octave Frequency Factor |
+| ----------: | :-----: | :--------------------------------: | :----: |
+| Temperature |   `4`   |             `(0.025, 0.025)` | `1/4` |
+| Humidity    |   `4`   |                `(0.05, 0.05)` | `1/3` |
+| Weirdness   |   `2`   | `(0.25, 0.25)` | `10/17` |
+
+The base scale and octave frequency factor remain the same throughout biome sampling, meaning that the only value that changes dynamically is the sampled position.
+
+### Sampling
 
 The current Chunk Coordinate, scaled to Block-Space (multiplied by `16`), is passed in, alongside how many values the generator should return (`16x16` for one chunk) and a scaling factor.
-
-| Generator   | Octaves |                              Scale |
-| ----------- | :-----: | ---------------------------------: |
-| Temperature |   `4`   |             `(0.025, 0.025, 0.25)` |
-| Humidity    |   `4`   |                `(0.05, 0.05, 1/3)` |
-| Weirdness   |   `2`   | `(0.25, 0.25, 0.5882352941176471)` |
 
 Each of these return a `16x16` array of 64-bit floating point numbers, which're that chunks' temperature, humidity and weirdness values.
 
@@ -103,34 +117,36 @@ Each of these return a `16x16` array of 64-bit floating point numbers, which're 
 
 ### Biome map
 
-The final biomes for each section are determined by iterating over the `16x16` array and performing the following actions for each entry.
+The final biomes for each column are determined by iterating over the `16x16` array and performing the following actions for each entry.
 
 $$
 \begin{aligned}
-w_i &= 1.1\,\mathrm{weird}_i + 0.5 \\[4pt]
+w &= 1.1 \cdot \,\mathrm{C_{weird}} + 0.5 \\
 s &= 0.01 \\
-m &= 1.0 - s \\[4pt]
-T_i &= (0.15\,\mathrm{temp}_i + 0.7)m + w_i s \\[4pt]
+m &= 1.0 - s \\
+t &= (0.15 \cdot \,\mathrm{C_{temp}} + 0.7) \cdot m + w \cdot s \\
 s &= 0.002 \\
-m &= 1.0 - s \\[4pt]
-H_i &= (0.15\,\mathrm{humi}_i + 0.5)m + w_i s \\[6pt]
-T_i &= 1.0 - (1.0 - T_i)^2 \\[6pt]
-T_i &= \min(1.0,\max(0.0,T_i)) \\
-H_i &= \min(1.0,\max(0.0,H_i)) \\[6pt]
-\mathrm{temp}_i &= T_i \\
-\mathrm{humi}_i &= H_i \\[4pt]
+m &= 1.0 - s \\
+h &= (0.15 \cdot \,\mathrm{C_{humi}} + 0.5) \cdot m + w \cdot s \\
+t &= 1.0 - (1.0 - t)^2 \\
+C_{temp} &= \min(1.0,\max(0.0,t)) \\
+C_{humi} &= \min(1.0,\max(0.0,h)) \\
 \end{aligned}
 $$
 
-The final biome is then determined by mapping the calculated `0.0` to `1.0` to range into the `64x64` biome LUT we calculated before.
+This gives you the temperature ($C_{temp}$), humidity ($C_{humi}$) and weirdness ($C_{weird}$) values of the chunk. The final biome is then determined by mapping the calculated `0.0` to `1.0` value into the `64x64` biome LUT we calculated before.
 
-The returned biome map can look something like this over a 3x3 chunk area.
+Besides being used to determine the biome, temperature is used a few times throughout the overworld generation to determine where snow and ice are placed, so at least it must be kept past this point. 
+
+Both temperature and humidity must be kept for the accurate coloration of foliage.
+
+The final biome map can look something like this over a 3x3 chunk area.
 
 |                                                  Foliage Colors                                                   |                                                Map Colors                                                 |
 | :---------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: |
 | <img src="../images/biome/terrainFoliage.png" alt="Biomes with foliage colors" style="width: 100%;" class="zoom"> | <img src="../images/biome/terrainMap.png" alt="Biomes with map colors" style="width: 100%;" class="zoom"> |
 
-The temperature and humidity values are changed by this function, resulting in a different set of values, to be used in later generation stages.
+Due to being modified, the temperature and humidity now also contain different values that were written back to the temperature and humidity arrays.
 
 |                                               Temperature                                               |                                             Humidity                                              |                                              Weirdness                                               |
 | :-----------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |

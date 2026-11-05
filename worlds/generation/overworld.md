@@ -20,13 +20,13 @@ The generation described in this section will explain how Minecraft Beta 1.7.3 d
 
 Before any terrain generation can happen, the generator needs to be initialized in a very specific order. This is due to all of the noise generators relying on a shared [PRNG](/technical/javaFeatures#random) for generating their permutation table. This is where the **world seed** is fed in.
 
-## Noise Generators
+### Noise Generators
 
 The overworld generator makes use of two types of noise generator: Perlin noise and Simplex noise. The perlin noise generators are used for terrain, while the simplex noise generators are used for climate and biome generation.
 
-### Terrain noises
+#### Terrain noises
 
-8 [Octaved Perlin Noise Generators](/technical/noise) are used by the overworld generator. Due to needing to be initilaized by a shared PRNG object, their order is presented in the order they're seeded in.
+8 [Octaved Perlin Noise Generators](/technical/noise) are used by the overworld generator for the terrain. Due to needing to be initilaized by a shared PRNG object, their order is presented in the order they're seeded in.
 
 | Generator          | Octaves |
 | :----------------- | ------- | 
@@ -97,14 +97,14 @@ The terrain density is used to determine where solid terrain blocks are placed, 
 
 Before we get started, we must discuss some of the relevant constants for this section.
 
-Firstly, the maximum x, y and z values. Our noises are sampled at `1/4` resolution, but to get the cross-boundary overlap, we sample it at `1/4 + 1`
+Firstly, the maximum x, y and z values. Our noises are sampled at a reduced resolution, so the max bounds for the area is calculated as follows.
 
 $$
 X_{\max},Z_{\max} = \frac{ChunkWidth}{4} + 1
 $$
 
 $$
-Y_{\max} = \frac{ChunkHeight}{4} + 1
+Y_{\max} = \frac{ChunkHeight}{8} + 1
 $$
 
 For the default chunk size of `16x128x16`, this results in `5` for the horizontal axis and `17` for the vertical one.
