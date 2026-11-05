@@ -109,8 +109,8 @@ The final biomes for each column are determined by iterating over the `16x16` ar
 $$
 \begin{aligned}
 w &= 1.1 \cdot \,{C_{weird}} + 0.5 \\
-t_0 &= (0.15 \cdot \,{C_{temp}} + 0.7) \cdot (1 - 0.01) + w \cdot 0.01 \\
-h &= (0.15 \cdot \,{C_{humi}} + 0.5) \cdot (1 - 0.002) + w \cdot 0.002 \\
+t_0 &= (0.15 \cdot \,{C_{temp}} + 0.7) \cdot 0.99 + w \cdot 0.01 \\
+h &= (0.15 \cdot \,{C_{humi}} + 0.5) \cdot 0.998 + w \cdot 0.002 \\
 t_1 &= 1 - (1 - t_0)^2 \\
 C_{temp} &= \min(1,\max(0,t_1)) \\
 C_{humi} &= \min(1,\max(0,h)) \\
